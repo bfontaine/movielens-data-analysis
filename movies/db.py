@@ -20,7 +20,8 @@ class BaseModel(peewee.Model):
 class Movie(BaseModel):
     movie_id = IntegerField(unique=True, primary_key=True)
     title = CharField()
-    release_date = DateTimeField()
+    # TODO change these to DateFields
+    release_date = DateTimeField(null=True) # should that really be allowed?
     video_release_date = DateTimeField(null=True)
     imdb_url = CharField()
 
