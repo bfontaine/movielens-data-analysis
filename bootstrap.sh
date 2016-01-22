@@ -9,6 +9,11 @@ ohai() {
   rm -rf data
 }
 
+if [ ! -d venv ]; then
+  ohai "Initializing the Python environment"
+  virtualenv venv >/dev/null
+fi
+
 if [ ! -d data ]; then
   ohai "Downloading the dataset"
 
@@ -20,3 +25,5 @@ if [ ! -d data ]; then
   mv ${DATASET} data
   rm -f ${DATASET}.zip data/u*.base data/u*.test
 fi
+
+ohai "All done!"
