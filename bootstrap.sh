@@ -14,6 +14,9 @@ if [ ! -d venv ]; then
   virtualenv venv >/dev/null
 fi
 
+ohai "Checking Python requirements"
+venv/bin/pip install --disable-pip-version-check -qr requirements.txt
+
 if [ ! -d data ]; then
   ohai "Downloading the dataset"
 
