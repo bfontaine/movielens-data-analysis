@@ -7,6 +7,7 @@ ohai() {
 [ "$1" == "--reset" ] && {
   ohai "Resetting..."
   rm -rf data
+  rm -f movies.db
 }
 
 if [ ! -d venv ]; then
@@ -27,6 +28,11 @@ if [ ! -d data ]; then
   unzip -qq ${DATASET}.zip
   mv ${DATASET} data
   rm -f ${DATASET}.zip data/u*.base data/u*.test
+fi
+
+if [ ! -f movies.db ]; then
+  ohai "Importing in the DB"
+  ./venv/bin/python scripts/import_data.py
 fi
 
 ohai "All done!"
