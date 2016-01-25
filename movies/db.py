@@ -25,7 +25,7 @@ class BaseModel(peewee.Model):
 class Movie(BaseModel):
     movie_id = IntegerField(unique=True, primary_key=True)
     title = CharField()
-    # TODO change these to DateFields
+    # TODO change these to DateFields (and fix the import)
     release_date = DateTimeField(null=True) # should null really be allowed?
     video_release_date = DateTimeField(null=True)
     imdb_url = CharField()
