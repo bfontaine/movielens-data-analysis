@@ -77,10 +77,17 @@ class Rating(BaseModel):
     rating = IntegerField()
     date = DateTimeField()
 
+    def positive(self):
+        return self.rating >= 3
+
+    def negative(self):
+        return self.rating < 3
+
     def __eq__(self, other):
         return self.user == other.user and \
                 self.movie == other.movie and \
                 self.date == other.date
+
 
 for g in GENRES:
     # http://stackoverflow.com/a/22365143/735926
