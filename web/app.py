@@ -15,6 +15,7 @@ sys.path.insert(0, '%s/..' % here)
 from movies.analysis import RatingsGraph
 
 # construct this only once
+print "Loading..."
 ratings_graph = RatingsGraph()
 
 sass_path = os.path.join(here, "static", "style")

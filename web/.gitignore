@@ -1,2 +1,4 @@
 node_modules
 /static/home.js
+/static/main.css
+.webassets-cache
