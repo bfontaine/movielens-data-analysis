@@ -1,0 +1,18 @@
+@import "partials/_graphs.scss";
+
+h1, h2 {
+  cursor: default;
+
+  a {
+    &, &:hover, &:target {
+      outline: inherit;
+      text-decoration: inherit;
+    }
+  }
+}
+
+.light-block {
+  border: 1px solid #666;
+  border-radius: 5px;
+  overflow: hidden;
+}

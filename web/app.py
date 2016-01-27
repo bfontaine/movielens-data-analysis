@@ -35,9 +35,9 @@ assets.register(
     "css_all",
     Bundle(
         "vendor/bootstrap.min.css",
-        "style/graphs.scss",
+        "style/main.scss",
         filters=(scss,),
-        output="graphs.css",
+        output="main.css",
 
         # this is necessary because we use @import statements in the SCSS. Note
         # that it disables caching.
