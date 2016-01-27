@@ -44,7 +44,7 @@ class RatingsGraph(object):
 
         # This implementation doesn't support dynamic filtering (e.g. add an
         # edge between two users only if they share X% of their movies) but
-        # runs in N*M (N users, M movies).
+        # runs in N*N*M (N users, M movies).
 
         for m in self.movies():
             fans = self.movie_fans(m)
