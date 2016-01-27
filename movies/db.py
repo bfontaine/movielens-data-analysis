@@ -40,7 +40,7 @@ class Movie(BaseModel):
         return "genre_%s" % g.lower().replace("-", "_").replace("'", "")
 
     @classmethod
-    def compute_inverse_popularity(degree):
+    def compute_inverse_popularity(cls, degree):
         return 1/math.log(1 + degree)
 
     def genres(self):
