@@ -1,8 +1,9 @@
 # -*- coding: UTF-8 -*-
 
+import math
 import peewee
-from peewee import IntegerField, CharField, DateTimeField, BooleanField
-from peewee import FixedCharField, ForeignKeyField
+from peewee import IntegerField, CharField, DateField, DateTimeField
+from peewee import BooleanField, FixedCharField, ForeignKeyField, FloatField
 from playhouse.sqlite_ext import SqliteExtDatabase
 
 GENRES = [
@@ -25,17 +26,22 @@ class BaseModel(peewee.Model):
 class Movie(BaseModel):
     movie_id = IntegerField(unique=True, primary_key=True)
     title = CharField()
-    # TODO change these to DateFields (and fix the import)
-    release_date = DateTimeField(null=True) # should null really be allowed?
-    video_release_date = DateTimeField(null=True)
+    release_date = DateField(null=True) # should null really be allowed?
+    video_release_date = DateField(null=True)
     imdb_url = CharField()
 
     # cached values
     ratings_count = IntegerField(null=True)
+    # 1/log(ratings_count)
+    inverse_popularity = FloatField(null=True)
 
     @classmethod
     def genre_attr(cls, g):
         return "genre_%s" % g.lower().replace("-", "_").replace("'", "")
+
+    @classmethod
+    def compute_inverse_popularity(degree):
+        return 1/math.log(1 + degree)
 
     def genres(self):
         return [g for g in GENRES if self.has_genre(g)]
@@ -50,6 +56,8 @@ class Movie(BaseModel):
 
     def post_import(self):
         self.ratings_count = len(self.ratings)
+        self.inverse_popularity = \
+                Movie.compute_inverse_popularity(self.ratings_count)
 
     def __eq__(self, other):
         return isinstance(other, Movie) and self.movie_id == other.movie_id

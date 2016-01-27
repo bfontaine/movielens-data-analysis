@@ -2,9 +2,9 @@
 
 from collections import defaultdict
 import networkx as nx
-from .db import Rating, init_db
+from .db import Movie, Rating, init_db
 
-class RatingsGraph(object):
+class ProjectedGraph(object):
 
     def __init__(self):
         init_db()
@@ -33,13 +33,13 @@ class RatingsGraph(object):
         """Return the movies positively rated by an user"""
         return self._neighbours(u_id)
 
-    def users_buddies(self, movies_threshold=20):
+    def users_buddies(self, movies_popularity_threshold=20):
         """
         Return a graph of all users where an edge between two users means they
         have at least 20 movies in common. Users that aren't connected to
         anyone are not present in the resulting graph.
         """
-        # user1 -> user2 -> number of common movies
+        # user1 -> user2 -> sum of inverse popularities of common movies
         buddies = defaultdict(lambda: defaultdict(int))
 
         # This implementation doesn't support dynamic filtering (e.g. add an
@@ -48,19 +48,20 @@ class RatingsGraph(object):
 
         for m in self.movies():
             fans = self.movie_fans(m)
+            degree = len(fans)
             for i, f1 in enumerate(fans):
                 for f2 in fans[i+1:]:
-                    buddies[f1][f2] += 1
+                    buddies[f1][f2] += Movie.compute_inverse_popularity(degree)
 
         g = nx.Graph()
 
         for u1, cofans in buddies.items():
-            for u2, n in cofans.items():
-                # skip people with less than <movies_threshold> common rated
-                # movies
-                if n < movies_threshold:
+            for u2, score in cofans.items():
+                # skip people with less than <movies_popularity_threshold>
+                # common score
+                if score < movies_popularity_threshold:
                     continue
-                g.add_edge(u1, u2)
+                g.add_edge(u1, u2, {"score": score})
 
         return g
 
