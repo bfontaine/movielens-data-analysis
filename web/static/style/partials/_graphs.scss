@@ -1,0 +1,17 @@
+.node, .link {
+  stroke: black;
+}
+
+.node {
+  cursor: default;
+  fill: #337ab7;
+
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+}
+
+.link {
+  stroke-width: 1px;
+}

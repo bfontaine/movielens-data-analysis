@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <title>{% block title %}MovieLens Dataset{% endblock %}</title>
+    <link rel="icon" type="image/png" href="/static/img/magnifier-64.png" />
+    {% assets "css_all" %}
+    <link rel="stylesheet" href="{{ ASSET_URL }}" />
+    {% endassets %}
+    <script src="/static/vendor/d3.min.js"></script>
+    <script src="/static/vendor/lodash.min.js"></script>
+    {% block head %}
+    {% endblock %}
+  </head>
+  <body>
+    <div class="container">
+        {% block body %}
+        {% endblock %}
+    </div>
+    {% block scripts %}
+    {% endblock %}
+  </body>
+</html>
+
