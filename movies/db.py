@@ -36,6 +36,12 @@ class Movie(BaseModel):
     inverse_popularity = FloatField(null=True)
 
     @classmethod
+    def get_by_id(self, m_id):
+        if str(m_id) == m_id and m_id[0] == "m":
+            m_id = m_id[1:]
+        return Movie.get(Movie.movie_id == int(m_id))
+
+    @classmethod
     def genre_attr(cls, g):
         return "genre_%s" % g.lower().replace("-", "_").replace("'", "")
 
@@ -71,6 +77,12 @@ class User(BaseModel):
 
     # cached values
     ratings_count = IntegerField(null=True)
+
+    @classmethod
+    def get_by_id(self, u_id):
+        if str(u_id) == u_id and u_id[0] == "m":
+            u_id = u_id[1:]
+        return User.get(User.movie_id == int(u_id))
 
     def post_import(self):
         self.ratings_count = len(self.ratings)

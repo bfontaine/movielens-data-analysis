@@ -12,11 +12,11 @@ from webassets_browserify import Browserify
 here = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, '%s/..' % here)
 
-from movies.analysis import ProjectedGraph
+from movies.analysis import RatingsGraph
 
 # construct this only once
 print "Loading..."
-ratings_graph = ProjectedGraph()
+ratings_graph = RatingsGraph()
 
 sass_path = os.path.join(here, "static", "style")
 
