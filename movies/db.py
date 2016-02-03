@@ -46,7 +46,7 @@ class Movie(BaseModel):
 
     @classmethod
     def compute_inverse_popularity(cls, degree):
-        return 1/(1 + degree)
+        return 1.0/(1 + degree)
 
     def genres(self):
         return [g for g in GENRES if self.has_genre(g)]

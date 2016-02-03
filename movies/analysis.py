@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 
 from collections import defaultdict
-from omitempty import omitempty
 import networkx as nx
 from .db import Movie, Rating, init_db
 
@@ -79,10 +78,6 @@ class RatingsGraph(object):
         def compute_fans_movies():
             fans = set([u_id])
             movies = set()
-            if distance < 1:
-                # return ego only
-                return fans, movies
-
             curr_dist = 1
 
             while curr_dist <= distance:
@@ -90,7 +85,7 @@ class RatingsGraph(object):
                 movies.update(filter_movies(self.users_movies(fans)))
 
                 if distance == curr_dist:
-                    return fans, movies
+                    break
 
                 curr_dist += 1
 
@@ -98,13 +93,15 @@ class RatingsGraph(object):
                 fans.update(self.movies_fans(movies))
 
                 if distance == curr_dist:
-                    return fans, movies
+                    break
+
+            return fans, movies
 
         fans, movies = compute_fans_movies()
         nodes = fans.union(movies)
         return RatingsGraph(self.g.subgraph(nodes))
 
-    def users_buddies(self, buddy_threshold=20):
+    def users_buddies(self, buddy_threshold=0.46):
         """
         Return a graph of all users where an edge between two users means they
         have at least 20 movies in common. Users that aren't connected to
@@ -140,8 +137,20 @@ class RatingsGraph(object):
 
         return g
 
+    def users_movies_gatekeepers(self, buddy_threshold=0.46, buddies=None):
+        """
+        Return a ``dict`` mapping each user to its gatekeepers, similarly to
+        what :meth:`user_movies_gatekeepers` returns for one user.
+        """
+        if buddies is None:
+            buddies = self.users_buddies(buddy_threshold)
+
+        # TODO optimize
+        return {u: self.user_movies_gatekeepers(u, buddies=buddies)
+                for u in buddies.node}
+
     def user_movies_gatekeepers(self, u_id,
-            buddy_threshold=20, buddies=None):
+            buddy_threshold=0.46, buddies=None):
         """
         For a given user return a ``dict`` mapping each one of their buddies to
         the movies they're the only one capable of recommending.
@@ -167,33 +176,19 @@ class RatingsGraph(object):
             b = self.users_buddies(buddy_threshold)
             buddies = b.edge[u_id].keys()
 
-        gatekeepers = {b: [] for b in buddies}
-
+        gatekeepers = defaultdict(list)
         ego_graph = self.ego_graph(u_id, 3)
-        ego_movies = ego_graph.user_movies(u_id)
-
-        buddies_movies = {b: ego_graph.user_movies(b) for b in buddies}
 
         for m in ego_graph.movies():
-            if m in ego_movies:
-                # Ego already knows this movie
+            # a gatekeep'ed movie has only one fan in the ego-centered graph
+            # and it's the gatekeeper.
+            fans = ego_graph.movie_fans(m)
+            if len(fans) != 1 or fans[0] == u_id:
                 continue
 
-            gatekeeper = None
-            for b, ms in buddies_movies.items():
-                if m in ms:
-                    if gatekeeper is None:
-                        gatekeeper = b
-                    else:
-                        # there's already a probable gatekeeper; now that
-                        # there're two of them they aren't gatekeepers anymore.
-                        gatekeeper = None
-                        break
+            gatekeepers[fans[0]].append(m)
 
-            if gatekeeper:
-                gatekeepers[gatekeeper].append(m)
-
-        return omitempty(gatekeepers)
+        return dict(gatekeepers)
 
 
     def _neighbours(self, n):
