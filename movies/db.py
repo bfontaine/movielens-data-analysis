@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-import math
 import peewee
 from peewee import IntegerField, CharField, DateField, DateTimeField
 from peewee import BooleanField, FixedCharField, ForeignKeyField, FloatField
@@ -47,7 +46,7 @@ class Movie(BaseModel):
 
     @classmethod
     def compute_inverse_popularity(cls, degree):
-        return 1/math.log(1 + degree)
+        return 1/(1 + degree)
 
     def genres(self):
         return [g for g in GENRES if self.has_genre(g)]
