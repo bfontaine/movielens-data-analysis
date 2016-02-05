@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 from collections import defaultdict
+import json
 import networkx as nx
 from .db import Movie, Rating, init_db
 
@@ -189,6 +190,11 @@ class RatingsGraph(object):
             gatekeepers[fans[0]].append(m)
 
         return dict(gatekeepers)
+
+    def dump(self, filename):
+        g = {n: ns.keys() for n, ns in self.g.edge.items()}
+        with open(filename, "w") as f:
+            f.write(json.dumps(g))
 
 
     def _neighbours(self, n):
