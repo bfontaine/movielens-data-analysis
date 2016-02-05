@@ -83,3 +83,33 @@ def minimal_users_coverage(rg, t=0):
         return without_m
 
     return coverage(users, movies, [])
+
+def common_movies_fans(rg, t=0.1, min_fans=2):
+    """
+    Compute the common movie fans between each pair of movies. The result is a
+    ratio of intersection/union, returned as a dict of dicts:
+        movie -> movie -> ratio
+    Ratios under ``t`` and movies with less than ``min_fans`` are removed.
+    """
+    movies = rg.movies()
+    fans = {m: set(rg.movie_fans(m)) for m in movies}
+    ratios = {}
+
+    for i, m1 in enumerate(movies):
+        f1 = fans[m1]
+        if len(f1) < min_fans:
+            continue
+
+        rs = {}
+        for m2 in movies[i+1:]:
+            f2 = fans[m2]
+            if len(f2) < min_fans:
+                continue
+            r = len(f1.intersection(f2))/float(len(f1.union(f2)))
+            if r > t:
+                rs[m2] = r
+
+        if rs:
+            ratios[m1] = rs
+
+    return ratios
