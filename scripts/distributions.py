@@ -1,5 +1,9 @@
 # -*- coding: UTF-8 -*-
 
+import os
+import sys
+sys.path.insert(0, '%s/..' % os.path.dirname(__file__))
+
 import json
 from movies.analysis import RatingsGraph
 from movies import insights
