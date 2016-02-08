@@ -138,19 +138,8 @@ class RatingsGraph(object):
 
         return g
 
-    def users_movies_gatekeepers(self, buddy_threshold=0.46, buddies=None):
-        """
-        Return a ``dict`` mapping each user to its gatekeepers, similarly to
-        what :meth:`user_movies_gatekeepers` returns for one user.
-        """
-        if buddies is None:
-            buddies = self.users_buddies(buddy_threshold)
-
-        # TODO optimize
-        return {u: self.user_movies_gatekeepers(u, buddies=buddies)
-                for u in buddies.node}
-
     def user_movies_gatekeepers(self, u_id,
+            gatekeepers_count=1,
             buddy_threshold=0.46, buddies=None):
         """
         For a given user return a ``dict`` mapping each one of their buddies to
@@ -172,6 +161,13 @@ class RatingsGraph(object):
         ``u1`` and ``u2`` are ``ego``'s buddies. ``u1`` is the only one who
         recommended ``m1`` and ``m2``. ``u2`` is the only one who recommended
         ``m4``.
+
+        ``gatekeepers_count`` is the maximum number of gatekeepers one can have
+        for a given movie. The default is one, meaning that if two of one's
+        buddies have seen the same movie they're not considered as gatekeepers.
+        If only one of them has seen it then it's a gatekeeper. You can
+        increase this number to have a less strict definition and thus more
+        gatekeepers.
         """
         if buddies is None:
             b = self.users_buddies(buddy_threshold)
@@ -184,12 +180,28 @@ class RatingsGraph(object):
             # a gatekeep'ed movie has only one fan in the ego-centered graph
             # and it's the gatekeeper.
             fans = ego_graph.movie_fans(m)
-            if len(fans) != 1 or fans[0] == u_id:
+            if u_id in fans:
+                fans.remove(u_id)
+            if len(fans) > gatekeepers_count:
                 continue
 
-            gatekeepers[fans[0]].append(m)
+            for fan in fans:
+                gatekeepers[fan].append(m)
 
         return dict(gatekeepers)
+
+    def users_movies_gatekeepers(self,
+            gatekeepers_count=1, buddy_threshold=0.46, buddies=None):
+        """
+        Return a ``dict`` mapping each user to its gatekeepers, similarly to
+        what :meth:`user_movies_gatekeepers` returns for one user.
+        """
+        if buddies is None:
+            buddies = self.users_buddies(buddy_threshold)
+
+        return {u: self.user_movies_gatekeepers(u,
+            gatekeepers_count=gatekeepers_count, buddies=buddies)
+                for u in buddies.node}
 
     def dump(self, filename):
         g = {n: ns.keys() for n, ns in self.g.edge.items()}

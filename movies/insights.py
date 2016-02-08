@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 
+from collections import defaultdict
+
 def minimal_movies_coverage(rg, t=0):
     """
     Return a minimal movies list such as all users in the dataset have seen at
@@ -113,3 +115,38 @@ def common_movies_fans(rg, t=0.1, min_fans=2):
             ratios[m1] = rs
 
     return ratios
+
+def gatekeepers_distribution(rg, gatekeepers_count=1,
+        buddy_threshold=0, movies=False):
+    """
+    Return a distribution of gatekeepers as a list ``L`` of counts such that if
+    ``L[N] = M`` then there are ``M`` gatekeepers in the dataset who hide
+    movies from ``N`` persons. ``L[0]`` will always be ``0``.
+
+    If ``movies=True`` is passed the distribution no longer count the
+    "gatekeep'd" users but the hidden movies. That is, ``L[N] = M`` means ``M``
+    gatekeepers from the dataset hide ``N`` movies from some users. This
+    doesn't mean they hide ``N`` movies from all their buddies.
+    """
+    users_gatekeepers = rg.users_movies_gatekeepers(
+            gatekeepers_count=gatekeepers_count,
+            buddy_threshold=buddy_threshold)
+    gatekeepers = defaultdict(set)
+
+    for u, gts in users_gatekeepers.items():
+        for gt, movies in gts.items():
+            if movies:
+                gatekeepers[gt].update(movies)
+            else:
+                gatekeepers[gt].add(u)
+
+    distrib = defaultdict(int)
+
+    max_n = 0
+
+    for s in gatekeepers.values():
+        n = len(s)
+        max_n = max(n, max_n)
+        distrib[n] += 1
+
+    return [distrib[m] for m in range(0, max_n+1)]
