@@ -12,27 +12,6 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import matplotlib.pyplot as plt
 
-def truncate_tail(ls):
-    """
-    Remove the tail of a list that consists of a list of 0s followed by one 1,
-    e.g.: ::
-
-        [128, 45, 3, 0, 0, 0, 0, 0, 1]
-
-    Gives: ::
-
-        [128, 45, 3]
-    """
-    if not ls or ls[-1] != 1:
-        return ls
-
-    ls = ls[:-1]
-    for i in range(len(ls)-1, 0, -1):
-        if ls[i] != 0:
-            return ls[:i+1]
-
-    return ls
-
 
 distribs = []
 max_freq = 0
@@ -47,8 +26,6 @@ filename = "distributions-people.jsons"
 with open("distributions-movies.jsons") as f:
     for line in f:
         d = json.loads(line)
-        d["distribution"] = truncate_tail(d["distribution"])
-
         distribs.append(d)
 
         max_count = max(max_count, len(d["distribution"]))
