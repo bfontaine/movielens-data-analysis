@@ -199,8 +199,9 @@ class RatingsGraph(object):
         if buddies is None:
             buddies = self.users_buddies(buddy_threshold)
 
+        # FIXME
         return {u: self.user_movies_gatekeepers(u,
-            gatekeepers_count=gatekeepers_count, buddies=buddies)
+            gatekeepers_count=gatekeepers_count, buddies=buddies.edge[u])
                 for u in buddies.node}
 
     def dump(self, filename):
