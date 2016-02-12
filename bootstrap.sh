@@ -5,8 +5,7 @@ ohai() {
 }
 
 [ "$1" == "--reset" ] && {
-  ohai "Resetting..."
-  #rm -rf data
+  ohai "Resetting the DB..."
   rm -f movies.db
 }
 
