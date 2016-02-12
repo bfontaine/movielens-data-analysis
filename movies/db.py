@@ -1,17 +1,41 @@
 # -*- coding: UTF-8 -*-
 
+import json
+from collections import defaultdict, OrderedDict
+from datetime import datetime
+
 import peewee
 from peewee import IntegerField, CharField, DateField, DateTimeField
 from peewee import BooleanField, FixedCharField, ForeignKeyField, FloatField
 from playhouse.sqlite_ext import SqliteExtDatabase
+from pyzipcode import ZipCodeDatabase
 
-GENRES = [
-    "Unknown", "Action", "Adventure", "Animation", "Children's", "Comedy",
-    "Crime", "Documentary", "Drama", "Fantasy", "Film-Noir", "Horror",
-    "Musical", "Mystery", "Romance", "Sci-Fi", "Thriller", "War", "Western",
-]
+# we need to keep them ordered so that they're in the same order as the
+# MovieLens files, making imports easier.
+GENRES = OrderedDict((
+    ("unknown", "Unknown"),
+    ("action", "Action"),
+    ("adventure", "Adventure"),
+    ("animation", "Animation"),
+    ("children's", "Children's"),
+    ("comedy", "Comedy"),
+    ("crime", "Crime"),
+    ("documentary", "Documentary"),
+    ("drama", "Drama"),
+    ("fantasy", "Fantasy"),
+    ("film_noir", "Film-Noir"),
+    ("horror", "Horror"),
+    ("musical", "Musical"),
+    ("mystery", "Mystery"),
+    ("romance", "Romance"),
+    ("sci_fi", "Sci-Fi"),
+    ("thriller", "Thriller"),
+    ("war", "war"),
+    ("western", "Western"),
+))
 
 db = SqliteExtDatabase("movies.db")
+zcdb = ZipCodeDatabase()
 
 class BaseModel(peewee.Model):
     class Meta:
@@ -41,10 +65,6 @@ class Movie(BaseModel):
         return Movie.get(Movie.movie_id == int(m_id))
 
     @classmethod
-    def genre_attr(cls, g):
-        return "genre_%s" % g.lower().replace("-", "_").replace("'", "")
-
-    @classmethod
     def compute_inverse_popularity(cls, degree):
         return 1.0/(1 + degree)
 
@@ -52,12 +72,13 @@ class Movie(BaseModel):
         return [g for g in GENRES if self.has_genre(g)]
 
     def has_genre(self, genre):
-        return getattr(self, Movie.genre_attr(genre))
+        if not genre.startswith("genre_"):
+            genre = "genre_%s" % genre
+        return getattr(self, genre)
 
     def set_genres(self, genres):
         for g, v in zip(GENRES, genres):
-            attr = Movie.genre_attr(g)
-            setattr(self, attr, bool(int(v)))
+            setattr(self, "genre_%s" % g, bool(int(v)))
 
     def post_import(self):
         self.ratings_count = len(self.ratings)
@@ -74,8 +95,15 @@ class User(BaseModel):
     occupation = CharField()
     zip_code = CharField()
 
-    # cached values
+    # cached/computed values
     ratings_count = IntegerField(null=True)
+    city = CharField(null=True)
+    state = CharField(null=True)
+    first_rating_date = DateTimeField(null=True)
+    # a JSON string associating each genre with the number of ratings
+    # e.g. {"western": 42, ...}. Note that a movie can have multiple genres. In
+    # that case we use a fraction (e.g. for two genres both get 0.5).
+    genres_json = CharField(null=True)
 
     @classmethod
     def get_by_id(self, u_id):
@@ -84,7 +112,33 @@ class User(BaseModel):
         return User.get(User.movie_id == int(u_id))
 
     def post_import(self):
-        self.ratings_count = len(self.ratings)
+        count = 0
+        first_rating_date = datetime.now()
+        genres = defaultdict(float)
+        for r in self.ratings:
+            count += 1
+            if r.date < first_rating_date:
+                first_rating_date = r.date
+
+        gs = r.movie.genres()
+        if gs:
+            gs_count = float(len(gs))
+            for g in gs:
+                genres[g] += 1/gs_count
+
+        self.genres_json = json.dumps(dict(genres))
+        self.ratings_count = count
+        self.first_rating_date = first_rating_date
+        try:
+            zipcode = zcdb[self.zip_code]
+            self.city = zipcode.city
+            self.state = zipcode.state
+        except IndexError:
+            # bad zipcodes
+            pass
+
+    def genres_ratings(self):
+        return json.loads(self.genres_json)
 
     def __eq__(self, other):
         return isinstance(other, User) and self.user_id == other.user_id
@@ -108,9 +162,10 @@ class Rating(BaseModel):
                 self.date == other.date
 
 
-for g in GENRES:
+# Add genre_<genre> attributes on movies, e.g. genre_western
+for g, name in GENRES.items():
     # http://stackoverflow.com/a/22365143/735926
-    BooleanField(verbose_name=g).add_to_class(Movie, Movie.genre_attr(g))
+    BooleanField(verbose_name=name).add_to_class(Movie, "genre_%s" % g)
 
 def init_db():
     db.connect()
