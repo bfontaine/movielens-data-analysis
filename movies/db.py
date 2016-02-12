@@ -17,7 +17,7 @@ GENRES = OrderedDict((
     ("action", "Action"),
     ("adventure", "Adventure"),
     ("animation", "Animation"),
-    ("children's", "Children's"),
+    ("children", "Children's"),
     ("comedy", "Comedy"),
     ("crime", "Crime"),
     ("documentary", "Documentary"),
@@ -109,7 +109,7 @@ class User(BaseModel):
     def get_by_id(self, u_id):
         if str(u_id) == u_id and u_id[0] == "m":
             u_id = u_id[1:]
-        return User.get(User.movie_id == int(u_id))
+        return User.get(User.user_id == int(u_id))
 
     def post_import(self):
         count = 0
@@ -120,8 +120,9 @@ class User(BaseModel):
             if r.date < first_rating_date:
                 first_rating_date = r.date
 
-        gs = r.movie.genres()
-        if gs:
+            gs = r.movie.genres()
+            if not gs:
+                continue
             gs_count = float(len(gs))
             for g in gs:
                 genres[g] += 1/gs_count

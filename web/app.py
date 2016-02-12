@@ -4,7 +4,7 @@ import os
 import sys
 import os.path
 import sass
-from flask import Flask, render_template
+from flask import Flask, render_template, abort
 from flask.ext.assets import Environment, Bundle
 from webassets.filter import register_filter
 from webassets_browserify import Browserify
@@ -12,11 +12,15 @@ from webassets_browserify import Browserify
 here = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, '%s/..' % here)
 
-from movies.analysis import RatingsGraph
+from movies.db import Movie, User, GENRES
+
+import display
+
+#from movies.analysis import RatingsGraph
 
 # construct this only once
-print "Loading..."
-ratings_graph = RatingsGraph()
+#print "Loading..."
+#ratings_graph = RatingsGraph()
 
 sass_path = os.path.join(here, "static", "style")
 
@@ -70,9 +74,26 @@ for js in ["home"]:
             output=target,
             depends=('js/**/*.js')))
 
+@app.route("/u/<uid>")
+def user_page(uid):
+    try:
+        user = User.get_by_id(uid)
+    except User.DoesNotExist:
+        abort(404)
+    return render_template("user.html", user=display.user(user), genres=GENRES)
+
+@app.route("/m/<mid>")
+def movie_page(mid):
+    try:
+        movie = Movie.get_by_id(mid)
+    except Movie.DoesNotExist:
+        abort(404)
+    return render_template("movie.html", movie=display.movie(movie),
+            genres=GENRES)
+
 @app.route("/")
 def home():
-    return render_template("home.html", ratings=ratings_graph)
+    return render_template("home.html")
 
 if __name__ == '__main__':
     app.run()

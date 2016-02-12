@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>User #{{ user.id }}</h1>
+<ul class="user-demographics">
+    {% if user.gender %}<li>{{ user.gender }}</li>{% endif %}
+    {% if user.age %}<li>{{ user.age }} years old</li>{% endif %}
+    {% if user.location %}<li>{{ user.location }}</li>{% endif %}
+    {% if user.occupation %}<li>{{ user.occupation }}</li>{% endif %}
+    {% if user.ratings_count %}<li>{{ user.ratings_count }} ratings</li>{% endif %}
+</ul>
+
+{% if user.genres_json %}
+<script type="text/x-json" id="genres">{{ user.genres_json | safe }}</script>
+{% endif %}
+{% endblock %}

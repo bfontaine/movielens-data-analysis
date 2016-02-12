@@ -1,13 +1,7 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>MovieLens Dataset</h1>
-
-<div id="graph"></div>
-
-{% block scripts %}
-<script type="text/x-data" id="graph-json">{{ graph_json | safe }}</script>
 {% assets "js_home" %}
 <script src="{{ ASSET_URL }}"></script>
 {% endassets %}
-{% endblock %}
 {% endblock %}
