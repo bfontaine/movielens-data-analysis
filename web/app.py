@@ -16,12 +16,6 @@ from movies.db import Movie, User, GENRES
 
 import display
 
-#from movies.analysis import RatingsGraph
-
-# construct this only once
-#print "Loading..."
-#ratings_graph = RatingsGraph()
-
 sass_path = os.path.join(here, "static", "style")
 
 os.environ["BROWSERIFY_BIN"] = "%s/node_modules/browserify/bin/cmd.js" % here
@@ -90,6 +84,15 @@ def movie_page(mid):
         abort(404)
     return render_template("movie.html", movie=display.movie(movie),
             genres=GENRES)
+
+@app.route("/g/<genre>")
+def genre_page(genre):
+    genre = genre.lower()
+    if genre not in GENRES:
+        abort(404)
+
+    movies = Movie.select().where(getattr(Movie, "genre_%s" % genre) == True)
+    return render_template("genre.html", genre=display.genre(genre, movies))
 
 @app.route("/")
 def home():

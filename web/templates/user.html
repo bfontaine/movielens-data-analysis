@@ -8,6 +8,8 @@
     {% if user.occupation %}<li>{{ user.occupation }}</li>{% endif %}
     {% if user.ratings_count %}<li>{{ user.ratings_count }} ratings</li>{% endif %}
 </ul>
+<h2>Ratings</h2>
+{# TODO #}
 
 {% if user.genres_json %}
 <script type="text/x-json" id="genres">{{ user.genres_json | safe }}</script>

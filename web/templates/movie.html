@@ -1,4 +1,18 @@
 {% extends "base.html" %}
 {% block body %}
-<h1>Movie #{{ movie.id }}</h1>
+<h1>{{ movie.title }}</h1>
+<ul class="movie-info">
+    {% if movie.release_date %}<li>Released on {{ movie.release_date }}</li>{% endif %}
+    {% if movie.video_release_date %}<li>Released in video on {{ movie.video_release_date }}</li>{% endif %}
+    {% if movie.average_rating %}<li>Average rating {{ movie.average_rating }}/5</li>{% endif %}
+    {% if movie.genres %}<li>
+        <ul class="movie-genres">
+            {% for g in movie.genres %}
+            <li class="movie-genre"><a href="{{ url_for('genre_page', genre=g) }}">{{ genres[g] }}</a></li>
+            {% endfor %}
+        </ul>
+    </li>{% endif %}
+</ul>
+<h2>Ratings</h2>
+{# TODO #}
 {% endblock %}

@@ -49,14 +49,15 @@ class BaseModel(peewee.Model):
 class Movie(BaseModel):
     movie_id = IntegerField(unique=True, primary_key=True)
     title = CharField()
-    release_date = DateField(null=True) # should null really be allowed?
+    # null=True because the dataset is not that clean
+    release_date = DateField(null=True)
     video_release_date = DateField(null=True)
     imdb_url = CharField()
 
     # cached values
     ratings_count = IntegerField(null=True)
-    # 1/log(ratings_count)
     inverse_popularity = FloatField(null=True)
+    average_rating = IntegerField(null=True)
 
     @classmethod
     def get_by_id(self, m_id):
@@ -81,9 +82,15 @@ class Movie(BaseModel):
             setattr(self, "genre_%s" % g, bool(int(v)))
 
     def post_import(self):
-        self.ratings_count = len(self.ratings)
-        self.inverse_popularity = \
-                Movie.compute_inverse_popularity(self.ratings_count)
+        count = 0
+        ratings_sum = 0
+        for r in self.ratings:
+            count += 1
+            ratings_sum += r.rating
+
+        self.ratings_count = count
+        self.inverse_popularity = Movie.compute_inverse_popularity(count)
+        self.average_rating = ratings_sum/float(count)
 
     def __eq__(self, other):
         return isinstance(other, Movie) and self.movie_id == other.movie_id
