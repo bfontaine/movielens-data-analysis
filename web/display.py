@@ -11,6 +11,7 @@ from movies.db import GENRES
 def user(u):
     d = {
         "id": u.user_id,
+        "number": u.user_id,
         "age": u.age,
         "ratings_count": u.ratings_count,
         "genres_json": u.genres_json,
@@ -33,6 +34,9 @@ def user(u):
 
     return d
 
+def users(us):
+    return map(user, us)
+
 def movie(m):
     d = {
         "id": m.movie_id,
@@ -40,6 +44,7 @@ def movie(m):
         "release_date": m.release_date,
         "video_release_date": m.video_release_date,
         "average_rating": m.average_rating,
+        "ratings_count": m.ratings_count,
     }
 
     genres = m.genres()
@@ -49,6 +54,9 @@ def movie(m):
         d["genres"] = genres
 
     return d
+
+def movies(ms):
+    return map(movie, ms)
 
 def genre(g, movies):
     d = {

@@ -30,7 +30,7 @@ GENRES = OrderedDict((
     ("romance", "Romance"),
     ("sci_fi", "Sci-Fi"),
     ("thriller", "Thriller"),
-    ("war", "war"),
+    ("war", "War"),
     ("western", "Western"),
 ))
 
@@ -69,17 +69,29 @@ class Movie(BaseModel):
     def compute_inverse_popularity(cls, degree):
         return 1.0/(1 + degree)
 
+    @classmethod
+    def genre_attr(cls, attr):
+        if not attr.startswith("genre_"):
+            attr = "genre_%s" % attr
+        return attr
+
+    @classmethod
+    def genre(cls, attr):
+        """
+        >>> Movie.genre("foo") == Movie.genre_foo
+        True
+        """
+        return getattr(cls, cls.genre_attr(attr))
+
     def genres(self):
         return [g for g in GENRES if self.has_genre(g)]
 
     def has_genre(self, genre):
-        if not genre.startswith("genre_"):
-            genre = "genre_%s" % genre
-        return getattr(self, genre)
+        return getattr(self, Movie.genre_attr(genre))
 
     def set_genres(self, genres):
         for g, v in zip(GENRES, genres):
-            setattr(self, "genre_%s" % g, bool(int(v)))
+            setattr(self, Movie.genre_attr(g), bool(int(v)))
 
     def post_import(self):
         count = 0
@@ -91,6 +103,11 @@ class Movie(BaseModel):
         self.ratings_count = count
         self.inverse_popularity = Movie.compute_inverse_popularity(count)
         self.average_rating = ratings_sum/float(count)
+
+    def raters(self):
+        return (User.select()
+                    .join(Rating, on=Rating.user)
+                    .where(Rating.movie == self))
 
     def __eq__(self, other):
         return isinstance(other, Movie) and self.movie_id == other.movie_id
@@ -147,6 +164,14 @@ class User(BaseModel):
 
     def genres_ratings(self):
         return json.loads(self.genres_json)
+
+    def movies(self):
+        """
+        Return all the movies rated by this user
+        """
+        return (Movie.select()
+                    .join(Rating, on=Rating.movie)
+                    .where(Rating.user == self))
 
     def __eq__(self, other):
         return isinstance(other, User) and self.user_id == other.user_id

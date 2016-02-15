@@ -6,10 +6,16 @@
     {% if user.age %}<li>{{ user.age }} years old</li>{% endif %}
     {% if user.location %}<li>{{ user.location }}</li>{% endif %}
     {% if user.occupation %}<li>{{ user.occupation }}</li>{% endif %}
-    {% if user.ratings_count %}<li>{{ user.ratings_count }} ratings</li>{% endif %}
 </ul>
-<h2>Ratings</h2>
-{# TODO #}
+{% if user.ratings_count %}
+<h2>{{ user.ratings_count }} Ratings</h2>
+
+<ul class="movies">
+{% for m in movies %}
+<li><a href="{{ url_for('movie_page', mid=m.id) }}">{{ m.title }}</a></li>
+{% endfor %}
+</ul>
+{% endif %}
 
 {% if user.genres_json %}
 <script type="text/x-json" id="genres">{{ user.genres_json | safe }}</script>

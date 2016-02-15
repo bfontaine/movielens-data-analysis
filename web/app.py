@@ -74,7 +74,10 @@ def user_page(uid):
         user = User.get_by_id(uid)
     except User.DoesNotExist:
         abort(404)
-    return render_template("user.html", user=display.user(user), genres=GENRES)
+    return render_template("user.html",
+            user=display.user(user),
+            movies=display.movies(sorted(user.movies(), key=lambda m: m.movie_id)),
+            genres=GENRES)
 
 @app.route("/m/<mid>")
 def movie_page(mid):
@@ -82,7 +85,9 @@ def movie_page(mid):
         movie = Movie.get_by_id(mid)
     except Movie.DoesNotExist:
         abort(404)
-    return render_template("movie.html", movie=display.movie(movie),
+    return render_template("movie.html",
+            movie=display.movie(movie),
+            users=display.users(sorted(movie.raters(), key=lambda u: u.user_id)),
             genres=GENRES)
 
 @app.route("/g/<genre>")
@@ -91,7 +96,7 @@ def genre_page(genre):
     if genre not in GENRES:
         abort(404)
 
-    movies = Movie.select().where(getattr(Movie, "genre_%s" % genre) == True)
+    movies = Movie.select().where(Movie.genre(genre) == True)
     return render_template("genre.html", genre=display.genre(genre, movies))
 
 @app.route("/")

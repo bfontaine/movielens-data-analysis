@@ -13,6 +13,12 @@
         </ul>
     </li>{% endif %}
 </ul>
-<h2>Ratings</h2>
-{# TODO #}
+{% if movie.ratings_count %}
+<h2>{{ movie.ratings_count }} Ratings</h2>
+<ul class="users">
+{% for u in users %}
+<li><a href="{{ url_for('user_page', uid=u.id) }}">#{{ u.number }}</a></li>
+{% endfor %}
+</ul>
+{% endif %}
 {% endblock %}
