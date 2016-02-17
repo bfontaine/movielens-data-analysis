@@ -3,6 +3,15 @@
 import time
 
 def timeit(fn):
+    """
+    Decorator to print how much time a function used to complete.
+
+    Example: ::
+
+        @timeit
+        def f(args):
+            print "foo"
+    """
     name = fn.__name__
 
     def _fn(*args, **kwargs):
