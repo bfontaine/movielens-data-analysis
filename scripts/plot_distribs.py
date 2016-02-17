@@ -23,7 +23,7 @@ buddy_thresholds = set()
 #filename = "distributions-movies.jsons"
 filename = "distributions-people.jsons"
 
-with open("distributions-movies.jsons") as f:
+with open(filename) as f:
     for line in f:
         d = json.loads(line)
         distribs.append(d)
@@ -49,6 +49,8 @@ for i, d in enumerate(distribs):
     gtc = d["gt_count"]
     bt = d["buddy_threshold"]
     arr = d["distribution"]
+
+    # TODO use logarithmic bars
 
     plt.subplot(nrows, ncols, i+1)
     # x1, x2, y1, y2

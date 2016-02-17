@@ -19,8 +19,6 @@ complete_cc = insights.common_movies_fans(rg, 0, 10)
 fontsize = 7
 movies = set()
 
-kull = "m266"
-
 for m1, ms in cc.items():
     movies.add(m1)
     for m2 in ms:
