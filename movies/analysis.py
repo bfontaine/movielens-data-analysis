@@ -19,6 +19,7 @@ class RatingsGraph(object):
                 nxgraph.add_node(m_id, bipartite=0)
                 nxgraph.add_edge(u_id, m_id)
         self.g = nxgraph
+        self._cache = {}
 
     def users(self):
         """Return all the users"""
@@ -51,11 +52,11 @@ class RatingsGraph(object):
         """
         movies = set()
         for u_id in u_ids:
-            for m in self.user_movies(u_id):
-                movies.add(m)
+            movies.update(self.user_movies(u_id))
         return list(movies)
 
-    def ego_graph(self, u_id, distance=1, inverse_popularity_threshold=0):
+    def ego_graph(self, u_id, distance=1, inverse_popularity_threshold=0,
+            cache=True):
         """
         Return an ego-centered graph of distance ``distance`` for the user
         ``u_id``. The default distance is 1, which means the resulting graph is
@@ -68,6 +69,19 @@ class RatingsGraph(object):
         use to filter films. If the threshold is high it’ll exclude the most
         popular films in our dataset.
         """
+        # allow simple caching
+        if cache:
+            key = "uid:%s/d:%d/ipt:%d" % (u_id, distance,
+                    inverse_popularity_threshold)
+
+            if key not in self._cache:
+                self._cache[key] = self.ego_graph(u_id,
+                        distance=distance,
+                        inverse_popularity_threshold=inverse_popularity_threshold,
+                        cache=False)
+
+            return self._cache[key]
+
         if inverse_popularity_threshold > 0:
             t = inverse_popularity_threshold
             filter_movies = lambda ms: [m for m in ms
@@ -138,6 +152,7 @@ class RatingsGraph(object):
 
         return g
 
+
     def user_movies_gatekeepers(self, u_id,
             gatekeepers_count=1,
             buddy_threshold=0.46, buddies=None):
@@ -174,19 +189,28 @@ class RatingsGraph(object):
             buddies = b.edge[u_id].keys()
 
         gatekeepers = defaultdict(list)
-        ego_graph = self.ego_graph(u_id, 3)
 
-        for m in ego_graph.movies():
-            # a gatekeep'ed movie has only one fan in the ego-centered graph
-            # and it's the gatekeeper.
-            fans = ego_graph.movie_fans(m)
-            if u_id in fans:
-                fans.remove(u_id)
-            if len(fans) > gatekeepers_count:
-                continue
+        movies = self.user_movies(u_id)
+        cofans = self.movies_fans(movies)
 
-            for fan in fans:
-                gatekeepers[fan].append(m)
+        for m in self.users_movies(cofans):
+            gts = []
+            n = 0
+            for fan in self.movie_fans(m):
+                if fan == u_id:
+                    continue
+                if fan not in cofans:
+                    continue
+
+                n += 1
+                if n > gatekeepers_count:
+                    gts = []
+                    break
+
+                gts.append(fan)
+
+            for g in gts:
+                gatekeepers[g].append(m)
 
         return dict(gatekeepers)
 
@@ -199,7 +223,6 @@ class RatingsGraph(object):
         if buddies is None:
             buddies = self.users_buddies(buddy_threshold)
 
-        # FIXME
         return {u: self.user_movies_gatekeepers(u,
             gatekeepers_count=gatekeepers_count, buddies=buddies.edge[u])
                 for u in buddies.node}

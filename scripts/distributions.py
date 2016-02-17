@@ -5,10 +5,14 @@ import sys
 sys.path.insert(0, '%s/..' % os.path.dirname(__file__))
 
 import json
+
+import networkx as nx
+
 from movies.analysis import RatingsGraph
 from movies import insights
 
 rg = RatingsGraph()
+all_buddies = rg.users_buddies(0)
 
 # deciles
 buddy_thresholds = [
@@ -26,24 +30,42 @@ buddy_thresholds = [
 
 gt_counts = range(1, 10+1)
 
-def mk_results(output, movies=False):
+# We use this to compute each filtered projected graph from the non-filtered
+# one instead of re-computing each from scratch
+def make_buddies(threshold):
+    g = nx.Graph()
+
+    for u1, us in all_buddies.edge.items():
+        for u2, opts in us.items():
+            if opts["score"] >= threshold:
+                g.add_edge(u1, u2, opts)
+
+    return g
+
+
+def mk_distrib(buddies, gt_count, buddy_threshold):
+    print "Running with gt_count: %2d / threshold: %.4f" % (
+            gt_count, buddy_threshold)
+
+    d = insights.gatekeepers_distribution(rg,
+            gatekeepers_count=gt_count,
+            buddies=buddies,
+            keep_ids=True)
+
+    res = {
+        "buddy_threshold": buddy_threshold,
+        "gt_count": gt_count,
+        "distribution": d,
+    }
+
+    return "%s\n" % json.dumps(res)
+
+def mk_results(output, **kwargs):
     with open(output, "w") as f:
         for buddy_threshold in buddy_thresholds:
+            buddies = make_buddies(buddy_threshold)
+
             for gt_count in gt_counts:
-                d = insights.gatekeepers_distribution(rg,
-                        gatekeepers_count=gt_count,
-                        buddy_threshold=buddy_threshold,
-                        movies=movies)
+                f.write(mk_distrib(buddies, gt_count, buddy_threshold))
 
-                res = {
-                    "buddy_threshold": buddy_threshold,
-                    "gt_count": gt_count,
-                    "distribution": d,
-                }
-
-                print "gt_count: %2d / threshold: %.4f / mx: %3d" % (
-                        gt_count, buddy_threshold, len(d))
-                f.write("%s\n" % json.dumps(res))
-
-mk_results("distributions-people.jsons")
-mk_results("distributions-movies.jsons", True)
+mk_results("distributions-people-ids.jsons")
