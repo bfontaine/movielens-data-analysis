@@ -50,7 +50,8 @@ for i, d in enumerate(distribs):
     bt = d["buddy_threshold"]
     arr = d["distribution"]
 
-    # TODO use logarithmic bars
+    # TODO use logarithmic bins
+    # http://stackoverflow.com/a/6856155/735926
 
     plt.subplot(nrows, ncols, i+1)
     # x1, x2, y1, y2

@@ -81,7 +81,7 @@ for d in distribs:
 users = sorted(users, key=lambda u: int(u[1:]))
 
 # We use these for users who are not ranked
-INFINITY = 1000
+INFINITY = -1
 
 rankings = []
 max_ranking = []
