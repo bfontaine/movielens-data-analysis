@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 import json
+import pickle
 from collections import defaultdict, OrderedDict
 from datetime import datetime
 
@@ -183,6 +184,12 @@ class Rating(BaseModel):
     rating = IntegerField()
     date = DateTimeField()
 
+    class Meta:
+        indexes = (
+            # We have only one rating for each user/movie pair
+            (("user", "movie"), True),
+        )
+
     def positive(self):
         return self.rating >= 3
 
@@ -198,10 +205,36 @@ class Rating(BaseModel):
 class KeyValue(BaseModel):
     """
     KeyValue is a simple model to store key-value records in the database.
-    Those are used to cache global stuff.
+    Those are used by e.g. ``movies.cache.DBCache``.
     """
     key = CharField(unique=True)
     value = CharField(null=True)
+
+    @classmethod
+    def get_key(cls, key, default=None):
+        """
+        Retrieve a key, like the ``dict#get`` method.
+        """
+        try:
+            return pickle.loads(cls.get(cls.key==key).value)
+        except KeyValue.DoesNotExist:
+            return default
+
+    @classmethod
+    def set_key(cls, key, value):
+        """
+        Set a key to an arbitrary value.
+        """
+        kv, _ = KeyValue.get_or_create(key=key)
+        kv.value = pickle.dumps(value)
+        kv.save()
+
+    @classmethod
+    def del_key(cls, key):
+        """
+        Permanently delete a key.
+        """
+        return cls.delete().where(cls.key==key).execute() > 0
 
 
 # Add genre_<genre> attributes on movies, e.g. genre_western

@@ -4,6 +4,13 @@ from collections import defaultdict
 import json
 import networkx as nx
 from .db import Movie, Rating, init_db
+from .cache import Cache
+
+cache = Cache()
+
+@cache.memoize0()
+def global_ratings_graph():
+    return RatingsGraph()
 
 class RatingsGraph(object):
 
