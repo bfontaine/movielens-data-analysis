@@ -195,6 +195,15 @@ class Rating(BaseModel):
                 self.date == other.date
 
 
+class KeyValue(BaseModel):
+    """
+    KeyValue is a simple model to store key-value records in the database.
+    Those are used to cache global stuff.
+    """
+    key = CharField(unique=True)
+    value = CharField(null=True)
+
+
 # Add genre_<genre> attributes on movies, e.g. genre_western
 for g, name in GENRES.items():
     # http://stackoverflow.com/a/22365143/735926
@@ -202,4 +211,4 @@ for g, name in GENRES.items():
 
 def init_db():
     db.connect()
-    db.create_tables([Movie, User, Rating], True)
+    db.create_tables([Movie, User, Rating, KeyValue], True)
