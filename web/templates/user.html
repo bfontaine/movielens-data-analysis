@@ -18,6 +18,6 @@
 {% endif %}
 
 {% if user.genres_json %}
-<script type="text/x-json" id="genres">{{ user.genres_json | safe }}</script>
+<script type="text/x-json" id="genres">{{ user.genres | tojson | safe }}</script>
 {% endif %}
 {% endblock %}

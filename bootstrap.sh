@@ -5,6 +5,7 @@ ohai() {
 }
 
 [ "$1" == "--reset" ] && {
+  shift
   ohai "Resetting the DB..."
   rm -f movies.db
 }
@@ -34,7 +35,7 @@ fi
 
 if [ ! -f movies.db ]; then
   ohai "Importing in the DB"
-  ./venv/bin/python scripts/import_data.py
+  ./venv/bin/python scripts/import_data.py $*
 fi
 
 ohai "All done!"

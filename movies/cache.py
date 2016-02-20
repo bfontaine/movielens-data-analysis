@@ -21,6 +21,9 @@ class Cache(object):
         # Those are the max items we store in memory
         self.max_items = max_items
 
+        # keep a list of the memoized0 functions
+        self.memoized0 = []
+
     def memoize0(self, k=None):
         """
         Memoize a function with no arguments.
@@ -72,6 +75,8 @@ class Cache(object):
             _fn.__name__ = fn.__name__
             _fn.__doc__ = fn.__doc__
 
+            self.memoized0.append(_fn)
+
             # then return the re-defined function
             return _fn
 
@@ -80,11 +85,29 @@ class Cache(object):
         return _decorator
 
     def cache(self, key, value):
+        """
+        Cache a key/value pair.
+        """
         KeyValue.set_key(key, value)
         if key in self._values:
             del self._values[key]
         self._values[key] = value
         self._check_size()
+
+    def warmup(self):
+        """
+        Call all memoized functions to ensure their result is in the cache.
+        """
+        for fn in self.memoized0:
+            fn()
+
+    def destroy(self):
+        """
+        Destroy the cached data. The cache can still be used afterward; it's
+        just empty.
+        """
+        KeyValue.del_key_prefix("%s." % self.key_prefix)
+        self._values = {}
 
     def _check_size(self):
         keys = self._values.keys()
@@ -104,5 +127,7 @@ class Cache(object):
         return v
 
     def _last_key(self):
+        if not self._values:
+            return None
         # http://stackoverflow.com/a/9917213/735926
         return next(reversed(self._values))

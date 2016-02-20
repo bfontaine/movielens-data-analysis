@@ -1,7 +1,13 @@
 # -*- coding: UTF-8 -*-
 
+from collections import defaultdict
 from datetime import datetime
-from .db import User, Movie, Rating, init_db, db
+from pyzipcode import ZipCodeDatabase
+
+from .analysis import global_ratings_graph
+from .db import User, Movie, Rating, UserLink, init_db, db
+
+zcdb = ZipCodeDatabase()
 
 def log(s, verbose):
     if verbose:
@@ -18,6 +24,8 @@ def import_data(directory, verbose=False):
     import_ratings("%s/u.data" % directory)
     log("Running post-import tasks...", verbose)
     post_import()
+    log("Creating user links...", verbose)
+    create_user_links()
 
 def fix_encoding(s):
     return s.decode("iso-8859-1").encode("utf8")
@@ -42,10 +50,22 @@ def import_users(filename):
         for line in f:
             u_id, age, gender, occupation, zip_code = \
                     fix_encoding(line).strip().split("|")
-            items.append(dict(user_id=u_id, age=int(age), gender=gender,
-                    occupation=occupation, zip_code=zip_code))
 
-    chunked_insert(User, items)
+            item = dict(user_id=u_id, age=int(age), gender=gender,
+                    occupation=occupation, zip_code=zip_code)
+
+            try:
+                zipcode = zcdb[zip_code]
+                item["city"] = zipcode.city
+                item["state"] = zipcode.state
+            except IndexError:
+                # bad zipcodes
+                item["city"] = None
+                item["state"] = None
+
+            items.append(item)
+
+    chunked_insert(User, items, 100)
 
 def import_ratings(filename):
     """
@@ -62,10 +82,76 @@ def import_ratings(filename):
     chunked_insert(Rating, items)
 
 def post_import():
-    for coll in [User, Movie]: #, Rating]:
-        for el in coll.select():
-            el.post_import()
-            el.save()
+    for u in User.select():
+        user_post_import(u)
+
+    for m in Movie.select():
+        movie_post_import(m)
+
+def movie_post_import(movie):
+    count = 0
+    ratings_sum = 0
+    for r in movie.ratings:
+        count += 1
+        ratings_sum += r.rating
+
+    movie.ratings_count = count
+    movie.average_rating = ratings_sum/float(count)
+    movie.save()
+
+def user_post_import(user):
+    count = 0
+    first_rating_date = datetime.now()
+    genres = defaultdict(float)
+    for r in user.ratings:
+        count += 1
+        if r.date < first_rating_date:
+            first_rating_date = r.date
+
+        gs = r.movie.genres()
+        if not gs:
+            continue
+        gs_count = float(len(gs))
+        for g in gs:
+            genres[g] += 1/gs_count
+
+    user.genres = dict(genres)
+    user.ratings_count = count
+    user.first_rating_date = first_rating_date
+    user.save()
+
+def create_user_links():
+    rg = global_ratings_graph()
+    uids = rg.users()
+    links = []
+    for user in User.select():
+        uid1 = "u%s" % user.user_id
+        m1 = set(rg.user_movies(uid1))
+
+        buddies = {}
+
+        for uid2 in uids:
+            if uid1 == uid2:
+                continue
+
+            m2 = set(rg.user_movies(uid2))
+
+            intersection = m1.intersection(m2)
+            if not intersection:
+                continue
+
+            union = m1.union(m2)
+
+            buddies[uid2] = dict(
+                # Jaccard index
+                j=len(intersection)/float(len(union)),
+                # Common movies count
+                c=len(intersection),
+            )
+
+        links.append(dict(user=user, buddies=buddies))
+
+    chunked_insert(UserLink, links)
 
 def chunked_insert(model, items, chunk_size=150):
     # https://www.sqlite.org/limits.html#max_compound_select

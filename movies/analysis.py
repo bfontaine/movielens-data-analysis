@@ -3,7 +3,7 @@
 from collections import defaultdict
 import json
 import networkx as nx
-from .db import Movie, Rating, init_db
+from .db import Movie, Rating, UserLink, init_db
 from .cache import Cache
 
 cache = Cache()
@@ -11,6 +11,10 @@ cache = Cache()
 @cache.memoize0()
 def global_ratings_graph():
     return RatingsGraph()
+
+@cache.memoize0()
+def movies_genres_distribution():
+    return Movie.genres_distribution()
 
 class RatingsGraph(object):
 
@@ -27,6 +31,31 @@ class RatingsGraph(object):
                 nxgraph.add_edge(u_id, m_id)
         self.g = nxgraph
         self._cache = {}
+
+    @classmethod
+    def users_buddies(cls, buddy_threshold=0):
+        """
+        Return a graph of all users where an edge between two users means they
+        have at least one movie in common. Users that aren't connected to
+        anyone are not present in the resulting graph.
+
+        ``buddy_threshold`` is the minimal score a dyad must have to be kept.
+        """
+        g = nx.Graph()
+
+        done = set()
+
+        for link in UserLink.select():
+            for u2, d in link.buddies.items():
+                if d["j"] > buddy_threshold:
+                    u1, u2 = sorted(("u%s" % link.user_id, u2))
+                    if (u1, u2) in done:
+                        continue
+                    done.add((u1, u2))
+
+                    g.add_edge(u1, u2, {"score": d["j"]})
+
+        return g
 
     def users(self):
         """Return all the users"""
@@ -123,42 +152,6 @@ class RatingsGraph(object):
         nodes = fans.union(movies)
         return RatingsGraph(self.g.subgraph(nodes))
 
-    def users_buddies(self, buddy_threshold=0.46):
-        """
-        Return a graph of all users where an edge between two users means they
-        have at least 20 movies in common. Users that aren't connected to
-        anyone are not present in the resulting graph.
-
-        ``buddy_threshold`` is the minimal score a dyad must have to be kept.
-        The score is computed as the sum of the inverse popularity of each
-        of the common movies.
-        """
-        # user1 -> user2 -> sum of inverse popularities of common movies
-        buddies = defaultdict(lambda: defaultdict(int))
-
-        # This implementation doesn't support dynamic filtering (e.g. add an
-        # edge between two users only if they share X% of their movies) but
-        # runs in N*N*M (N users, M movies).
-
-        for m in self.movies():
-            fans = self.movie_fans(m)
-            degree = len(fans)
-            for i, f1 in enumerate(fans):
-                for f2 in fans[i+1:]:
-                    buddies[f1][f2] += Movie.compute_inverse_popularity(degree)
-
-        g = nx.Graph()
-
-        for u1, cofans in buddies.items():
-            for u2, score in cofans.items():
-                # skip people with less than <movies_popularity_threshold>
-                # common score
-                if score < buddy_threshold:
-                    continue
-                g.add_edge(u1, u2, {"score": score})
-
-        return g
-
 
     def user_movies_gatekeepers(self, u_id,
             gatekeepers_count=1,
@@ -192,7 +185,7 @@ class RatingsGraph(object):
         gatekeepers.
         """
         if buddies is None:
-            b = self.users_buddies(buddy_threshold)
+            b = RatingsGraph.users_buddies(buddy_threshold)
             buddies = b.edge[u_id].keys()
 
         gatekeepers = defaultdict(list)
@@ -228,7 +221,7 @@ class RatingsGraph(object):
         what :meth:`user_movies_gatekeepers` returns for one user.
         """
         if buddies is None:
-            buddies = self.users_buddies(buddy_threshold)
+            buddies = RatingsGraph.users_buddies(buddy_threshold)
 
         return {u: self.user_movies_gatekeepers(u,
             gatekeepers_count=gatekeepers_count, buddies=buddies.edge[u])
@@ -238,7 +231,6 @@ class RatingsGraph(object):
         g = {n: ns.keys() for n, ns in self.g.edge.items()}
         with open(filename, "w") as f:
             f.write(json.dumps(g))
-
 
     def _neighbours(self, n):
         return self.g.edge.get(n, {}).keys()

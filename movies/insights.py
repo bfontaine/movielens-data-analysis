@@ -2,6 +2,8 @@
 
 from collections import defaultdict
 
+from .db import RatingsGraph
+
 def minimal_movies_coverage(rg, t=0):
     """
     Return a minimal movies list such as all users in the dataset have seen at
@@ -18,7 +20,7 @@ def minimal_movies_coverage(rg, t=0):
     p = int(len(users) * t)
 
     def coverage(movies, users, cov):
-        if len(users) <= p: #not users:
+        if len(users) <= p:
             return cov
 
         if not movies:
@@ -133,7 +135,7 @@ def gatekeepers_distribution(rg, gatekeepers_count=1,
     instead of a list of counts.
     """
     if buddies is None:
-        buddies = rg.users_buddies(buddy_threshold)
+        buddies = RatingsGraph.users_buddies(buddy_threshold)
 
     users_gatekeepers = rg.users_movies_gatekeepers(
             gatekeepers_count=gatekeepers_count,
