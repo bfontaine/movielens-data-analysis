@@ -5,6 +5,7 @@ import sys
 sys.path.insert(0, '%s/..' % os.path.dirname(__file__))
 
 import json
+import numpy as np
 
 # avoid an annoying (useless) warning
 import warnings
@@ -13,9 +14,22 @@ with warnings.catch_warnings():
     import matplotlib.pyplot as plt
 
 
+def unpack_distrib(d):
+    """
+    Return the original data from a given distribution, e.g.: ::
+
+        >>> unpack_distrib([0, 3, 2, 0, 1])
+        [1, 1, 1, 2, 2, 4]
+    """
+    data = []
+    for i, n in enumerate(d):
+        if n:
+            data += [i] * n
+
+    return data
+
+
 distribs = []
-max_freq = 0
-max_count = 0
 
 gt_counts = set()
 buddy_thresholds = set()
@@ -27,9 +41,6 @@ with open(filename) as f:
     for line in f:
         d = json.loads(line)
         distribs.append(d)
-
-        max_count = max(max_count, len(d["distribution"]))
-        max_freq = max(max_freq, *d["distribution"])
 
         gt_counts.add(d["gt_count"])
         buddy_thresholds.add(d["buddy_threshold"])
@@ -45,18 +56,16 @@ ncols = len(buddy_thresholds)
 
 last_row_index = ncols * (nrows - 1)
 
+logspace = np.logspace(0, 10, base=2)
+
 for i, d in enumerate(distribs):
     gtc = d["gt_count"]
     bt = d["buddy_threshold"]
-    arr = d["distribution"]
+    arr = unpack_distrib(d["distribution"])
 
-    # TODO use logarithmic bins
-    # http://stackoverflow.com/a/6856155/735926
-
-    plt.subplot(nrows, ncols, i+1)
-    # x1, x2, y1, y2
-    plt.axis((1, max_count, 0, max_freq))
-    plt.bar(range(len(arr)), arr, width=1)
+    ax = plt.subplot(nrows, ncols, i+1)
+    plt.hist(arr, bins=logspace)
+    ax.set_xscale("log", basex=2, nonposx="clip")
 
     # remove the X ticks labels unless we're at the bottom
     if i < last_row_index:
