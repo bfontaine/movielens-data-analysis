@@ -14,7 +14,7 @@ if [ ! -d venv ]; then
   ohai "Initializing the Python environment"
   virtualenv venv >/dev/null
 
-  curl -sL https://git.io/vguGk >| /venv/bin/frameworkpython
+  curl -sL https://git.io/vguGk >| ./venv/bin/frameworkpython
   chmod +x ./venv/bin/frameworkpython
 fi
 
