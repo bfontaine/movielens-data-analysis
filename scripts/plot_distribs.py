@@ -65,6 +65,7 @@ for i, d in enumerate(distribs):
 
     ax = plt.subplot(nrows, ncols, i+1)
     plt.hist(arr, bins=logspace)
+    ax.set_yscale("log", basey=2, nonposy="clip")
     ax.set_xscale("log", basex=2, nonposx="clip")
 
     # remove the X ticks labels unless we're at the bottom

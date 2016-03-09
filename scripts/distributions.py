@@ -16,16 +16,17 @@ all_buddies = rg.users_buddies(0)
 
 # deciles
 buddy_thresholds = [
-    0,
-    0.0036363636363636364,
-    0.0063916104885135619,
-    0.010060980215131566,
-    0.014521552144421941,
-    0.020288483446378184,
-    0.028861602160590777,
-    0.041990776417902477,
-    0.065420561190010773,
-    0.1234828753671024,
+    0.0024,
+    0.0171,
+    0.0276,
+    0.0385,
+    0.0504,
+    0.0638,
+    0.0804,
+    0.1016,
+    0.1311,
+    0.1769,
+    0.6897,
 ]
 
 gt_counts = range(1, 10+1)
@@ -43,14 +44,15 @@ def make_buddies(threshold):
     return g
 
 
-def mk_distrib(buddies, gt_count, buddy_threshold):
+def mk_distrib(buddies, gt_count, buddy_threshold, **kw):
     print "Running with gt_count: %2d / threshold: %.4f" % (
             gt_count, buddy_threshold)
 
     d = insights.gatekeepers_distribution(rg,
             gatekeepers_count=gt_count,
             buddies=buddies,
-            keep_ids=True)
+            **kw)
+            #keep_ids=True)
 
     res = {
         "buddy_threshold": buddy_threshold,
@@ -60,12 +62,13 @@ def mk_distrib(buddies, gt_count, buddy_threshold):
 
     return "%s\n" % json.dumps(res)
 
-def mk_results(output, **kwargs):
+def mk_results(output, **kw):
     with open(output, "w") as f:
         for buddy_threshold in buddy_thresholds:
             buddies = make_buddies(buddy_threshold)
 
             for gt_count in gt_counts:
-                f.write(mk_distrib(buddies, gt_count, buddy_threshold))
+                f.write(mk_distrib(buddies, gt_count, buddy_threshold, **kw))
 
-mk_results("distributions-people-ids.jsons")
+#mk_results("distributions-people-ids.jsons")
+mk_results("distributions-people-jaccard.jsons", keep_ids=False)

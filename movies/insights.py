@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 
-from .db import RatingsGraph
+from .analysis import RatingsGraph
 
 def minimal_movies_coverage(rg, t=0):
     """
