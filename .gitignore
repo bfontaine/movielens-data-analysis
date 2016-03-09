@@ -2,3 +2,4 @@
 /*.db
 *.jsons
 /figures
+node_modules
