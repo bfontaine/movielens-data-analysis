@@ -215,7 +215,7 @@ class RatingsGraph(object):
         return dict(gatekeepers)
 
     def users_movies_gatekeepers(self,
-            gatekeepers_count=1, buddy_threshold=0.46, buddies=None):
+            gatekeepers_count=1, buddy_threshold=0, buddies=None):
         """
         Return a ``dict`` mapping each user to its gatekeepers, similarly to
         what :meth:`user_movies_gatekeepers` returns for one user.
