@@ -45,6 +45,16 @@ for m1, ms in complete_cc.items():
         matrix[i1, i2] = corr
         matrix[i2, i1] = corr
 
+# with open("ordered-matrix.json") as f:
+#     import json
+#     matrix = np.matrix(json.loads(f.read()))
+
+
+#with open("/tmp/m.json", "w") as f:
+#    import json
+#    f.write(json.dumps(matrix.tolist()))
+#    raise Exception()
+
 fig_, ax = plt.subplots()
 heatmap = ax.pcolor(matrix, cmap=plt.cm.Blues)
 
