@@ -35,7 +35,7 @@ gt_counts = set()
 buddy_thresholds = set()
 
 #filename = "distributions-movies.jsons"
-filename = "distributions-people.jsons"
+filename = "distributions-people-jaccard.jsons"
 
 with open(filename) as f:
     for line in f:
