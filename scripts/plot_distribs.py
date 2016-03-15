@@ -7,11 +7,7 @@ sys.path.insert(0, '%s/..' % os.path.dirname(__file__))
 import json
 import numpy as np
 
-# avoid an annoying (useless) warning
-import warnings
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import matplotlib.pyplot as plt
+from movies.plotting import plt
 
 
 def unpack_distrib(d):
