@@ -2,4 +2,5 @@
 /*.db
 *.jsons
 /figures
+/notes/*.pdf
 node_modules
