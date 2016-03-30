@@ -16,8 +16,12 @@ if [ ! -d $DIRECTORY ]; then
   rm -f ${DATASET}.zip
   URL=http://files.grouplens.org/datasets/movielens/${DATASET}.zip
   wget -q $URL -O ${DATASET}.zip
-  unzip -qq ${DATASET}.zip
-  mv $DATASET $DIRECTORY
+  unzip -qq -d .tmp ${DATASET}.zip
+  # Sometimes the archive's directory has a different name, e.g. ml-10m.zip
+  # unpacks in mk-10M100K. We use a temporary directory to be able to move
+  # whatever directory it unpacks.
+  mv .tmp/ml-* $DIRECTORY
+  rm -rf .tmp
   rm -f ${DATASET}.zip $DIRECTORY/u*.base $DIRECTORY/u*.test
 fi
 

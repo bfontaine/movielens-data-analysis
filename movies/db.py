@@ -7,6 +7,7 @@ from collections import defaultdict, OrderedDict
 import peewee
 from peewee import IntegerField, CharField, DateField, DateTimeField
 from peewee import BooleanField, FixedCharField, ForeignKeyField, TextField
+from peewee import FloatField
 from playhouse.sqlite_ext import SqliteExtDatabase
 
 # we need to keep them ordered so that they're in the same order as the
@@ -145,6 +146,21 @@ class Movie(BaseModel):
         return getattr(self, Movie.genre_attr(genre))
 
     def set_genres(self, genres):
+        genres2 = []
+        for g in genres:
+            # Unwanted genres from ml-10m. Note that IMAX is not listed in the
+            # README.
+            if g in ("(no genres listed)", "IMAX"):
+                continue
+            # ml-10m's README says it uses "Children's" but in reality it uses
+            # "Children". Let's fix that.
+            if g == "Children":
+                g = "Children's"
+
+            genres2.append(g)
+
+        genres = genres2
+
         # Check if the genres are given as a list of strings or not. This is
         # for ml-1m/ml-10m where each movie lists its genres. The ml-100k
         # dataset lists its genre as a serie of 0s and 1s where the i-th number
@@ -212,7 +228,8 @@ class User(BaseModel):
 class Rating(BaseModel):
     user = ForeignKeyField(User, related_name="ratings")
     movie = ForeignKeyField(Movie, related_name="ratings")
-    rating = IntegerField()
+    # In ml-10m ratings can be floats (e.g. 4.5)
+    rating = FloatField()
     date = DateTimeField()
 
     class Meta:
@@ -275,7 +292,8 @@ class KeyValue(BaseModel):
 # Add genre_<genre> attributes on movies, e.g. genre_western
 for g, name in GENRES.items():
     # http://stackoverflow.com/a/22365143/735926
-    BooleanField(verbose_name=name).add_to_class(Movie, "genre_%s" % g)
+    BooleanField(verbose_name=name, default=False).add_to_class(
+            Movie, "genre_%s" % g)
 
 def init_db():
     db.connect()

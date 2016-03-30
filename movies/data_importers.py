@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-from collections import defaultdict
 from datetime import datetime
 from pyzipcode import ZipCodeDatabase
 
@@ -35,13 +34,22 @@ def parse_ts(s):
     # timestamp in secs
     return datetime.utcfromtimestamp(int(s))
 
-def create_user_links():
+def create_user_links(verbose=False):
     """
-    Store user links in the DB so that loading the graph can be fast. In
-    practice loading all these users is not tremendously faster than
-    re-computing the whole graph.
+    Store user links in the DB so that loading the graph can be fast.
+
+    On the ml-100k dataset loading all these users is not tremendously faster
+    than re-computing the whole graph.
+
+    On the ml-1m dataset this adds a lot of data in the DB; growing it from
+    ~130MB to >1.6GB. It also takes a lot of time (>30m) and uses a lot of RAM
+    (>10GB); I never waited until it finishes.
     """
+    print "WARN: not running create_user_links because it takes too much time"
+    return
     rg = global_ratings_graph()
+    if verbose:
+        print "Ratings graph loaded."
     uids = rg.users()
     links = []
     for user in User.select():
@@ -100,7 +108,7 @@ class Importer(object):
         self.log("Running post-import tasks...")
         self.post_import()
         self.log("Creating user links...")
-        create_user_links()
+        create_user_links(verbose=self.verbose)
 
     def start(self):
         init_db()
@@ -303,7 +311,7 @@ class Ml1mImporter(MlImporter):
 
     def parse_rating_dict(self, line):
         u_id, m_id, rating, ts = line.split("::")
-        return dict(user=int(u_id), movie=int(m_id), rating=int(rating),
+        return dict(user=int(u_id), movie=int(m_id), rating=float(rating),
                 date=parse_ts(ts))
 
 class Ml10mImporter(Ml1mImporter):
@@ -312,11 +320,11 @@ class Ml10mImporter(Ml1mImporter):
     # There are no user info in this dataset, so we extract the user ids from
     # the ratings file
     def import_users(self):
-        users = set()
+        users = {}
 
         with open(self.ratings_filename()) as f:
             for line in f:
-                u_id, _ = fix_encoding(line).strip().split("::", 2)
-                users.add(dict(user_id=u_id))
+                u_id, _ = fix_encoding(line).strip().split("::", 1)
+                users[u_id] = dict(user_id=u_id)
 
-        chunked_insert(User, list(users), 100)
+        chunked_insert(User, users.values(), 100)
