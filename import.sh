@@ -1,14 +1,17 @@
 #! /bin/bash
 
-ohai() {
-  echo "==> $*"
-}
+if [ "$#" -eq "0" ]; then
+  echo "Usage:"
+  echo "    $0 <dataset>"
+  echo "<dataset> must be 'ml-100k' for now."
+  exit 1
+fi
 
-DATASET=ml-100k
+DATASET=$1
 DIRECTORY=data-$DATASET
 
 if [ ! -d $DIRECTORY ]; then
-  ohai "Downloading the dataset"
+  echo "==> Downloading the dataset"
 
   rm -f ${DATASET}.zip
   wget -q http://files.grouplens.org/datasets/movielens/${DATASET}.zip
@@ -18,8 +21,8 @@ if [ ! -d $DIRECTORY ]; then
 fi
 
 if [ ! -f movies.db ]; then
-  ohai "Importing in the DB"
+  echo "==> Importing in the DB"
   ./venv/bin/python scripts/import_data.py $DIRECTORY $DATASET
 fi
 
-ohai "All done!"
+echo "==> All done!"

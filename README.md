@@ -17,10 +17,21 @@ Then make sure it’s added to the dependencies:
 
     ./venv/bin/pip freeze >| requirements.txt
 
+## Import
+
+    ./import.sh ml-100k
+
+Only the `ml-100k` dataset is supported for now. The script downloads the
+archive, unpacks it in `data-ml-100k/`, and imports it in the DB.
+
+You can only have one dataset in the DB at once; if you want to switch between
+multiple ones you'll need to move the DB somewhere else, import another dataset
+then rename the files around to switch.
+
 ## Reset
 
-If you want to import the database again, for example if you want to change the
-dataset, just remove the `movies.db` file and run the import again.
+If you want to reset the database, for example to change the dataset, just
+remove the `movies.db` file and run the import again.
 
 ## Troubleshooting
 
