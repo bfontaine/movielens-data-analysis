@@ -45,8 +45,6 @@ def create_user_links(verbose=False):
     ~130MB to >1.6GB. It also takes a lot of time (>30m) and uses a lot of RAM
     (>10GB); I never waited until it finishes.
     """
-    print "WARN: not running create_user_links because it takes too much time"
-    return
     rg = global_ratings_graph()
     if verbose:
         print "Ratings graph loaded."
