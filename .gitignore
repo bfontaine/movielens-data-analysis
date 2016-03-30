@@ -8,3 +8,6 @@
 node_modules
 *.zip
 *.zip.1
+/ordered-matrix.json
+/report
+/notes

@@ -1,4 +1,16 @@
-# ***REMOVED*** - MovieLens
+# MovieLens Data Analysis
+
+This repo contains code exported from a research project that uses the
+[MovieLens 100k dataset](http://grouplens.org/datasets/movielens/). You can’t
+do much of it without the context but it can be useful as a reference for
+various code snippets.
+
+The project is not endorsed by the University of Minnesota or the GroupLens
+Research Group.
+
+The original README follows.
+
+-------------------------------------------------------------------------------
 
 ## Setup
 
@@ -42,10 +54,3 @@ Install it with:
 
   curl -sL https://git.io/vguGk >| ./venv/bin/frameworkpython
   chmod +x ./venv/bin/frameworkpython
-
-## Report
-
-The report is located under `report/`; it can be compiled with `./compile.sh`.
-You might need to run `tlmgr install csquotes` so that it can find the module.
-If you have `fswatch` you can use `./watch.sh` to re-compile the report
-every time a source file changes.
