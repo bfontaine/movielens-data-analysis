@@ -19,10 +19,10 @@ Then make sure it’s added to the dependencies:
 
 ## Import
 
-    ./import.sh ml-100k
+    ./import.sh <dataset>
 
-Only the `ml-100k` dataset is supported for now. The script downloads the
-archive, unpacks it in `data-ml-100k/`, and imports it in the DB.
+`<dataset>` can be one of `ml-100k`, `ml-1m`, or `ml-10m`. The script downloads
+the archive, unpacks it in `data-<dataset>/`, and imports it in the DB.
 
 You can only have one dataset in the DB at once; if you want to switch between
 multiple ones you'll need to move the DB somewhere else, import another dataset

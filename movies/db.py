@@ -145,6 +145,18 @@ class Movie(BaseModel):
         return getattr(self, Movie.genre_attr(genre))
 
     def set_genres(self, genres):
+        # Check if the genres are given as a list of strings or not. This is
+        # for ml-1m/ml-10m where each movie lists its genres. The ml-100k
+        # dataset lists its genre as a serie of 0s and 1s where the i-th number
+        # tells if the movie has the i-th genre
+        if genres and genres[0] in GENRES.values():
+            genres = set(genres)
+
+            for g, name in GENRES.items():
+                setattr(self, Movie.genre_attr(g), name in genres)
+            return
+
+        # This works for ml-100k only: genres are 0s or 1s
         for g, v in zip(GENRES, genres):
             setattr(self, Movie.genre_attr(g), bool(int(v)))
 
@@ -166,9 +178,10 @@ class User(BaseModel):
     # 45 = 45-49
     # 50 = 50-55
     # 56 = 56+
-    age = IntegerField()
-    gender = FixedCharField(max_length=1)
-    occupation = OccupationField()
+    # Also starting from the ml-10m dataset there are no more demographic infos
+    age = IntegerField(null=True)
+    gender = FixedCharField(max_length=1, null=True)
+    occupation = OccupationField(null=True)
     zip_code = CharField(null=True)
 
     # cached/computed values

@@ -1,9 +1,9 @@
-#! /bin/bash
+#! /bin/bash -e
 
 if [ "$#" -eq "0" ]; then
   echo "Usage:"
   echo "    $0 <dataset>"
-  echo "<dataset> must be 'ml-100k' for now."
+  echo "<dataset> must be one of 'ml-100k', 'ml-1m', or 'ml-10m'."
   exit 1
 fi
 
