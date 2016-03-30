@@ -176,10 +176,6 @@ class User(BaseModel):
     city = CharField(null=True)
     state = CharField(null=True)
     first_rating_date = DateTimeField(null=True)
-    # a JSON string associating each genre with the number of ratings
-    # e.g. {"western": 42, ...}. Note that a movie can have multiple genres. In
-    # that case we use a fraction (e.g. for two genres both get 0.5).
-    genres = JSONField(default={})
 
     @classmethod
     def get_by_id(self, u_id):

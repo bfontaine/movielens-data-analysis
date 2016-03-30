@@ -14,8 +14,6 @@ def user(u):
         "number": u.user_id,
         "age": u.age,
         "ratings_count": u.ratings_count,
-        # FIXME
-        #"genres_json": u.genres_json,
     }
 
     if u.gender == "M":

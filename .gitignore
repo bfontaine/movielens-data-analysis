@@ -1,6 +1,7 @@
 /data
 /data-*
-/*.db
+*.db
+*.db-journal
 *.jsons
 /figures
 /notes/*.pdf
