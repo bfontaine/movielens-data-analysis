@@ -46,13 +46,59 @@ class JSONField(TextField):
     def python_value(self, value):
         return json.loads(super(JSONField, self).python_value(value))
 
+class OccupationField(CharField):
+    """
+    A text field that uniformize the occupation
+    """
+
+    # These are from the ml100k dataset
+    _OCCUPATIONS = set((
+        "administrator", "artist", "doctor", "educator", "engineer",
+        "entertainment", "executive", "healthcare", "homemaker", "lawyer",
+        "librarian", "marketing", "none", "other", "programmer", "retired",
+        "salesman", "scientist", "student", "technician", "writer"))
+
+    def _normalize(self, value):
+        value = value.lower().strip()
+        if value in OccupationField._OCCUPATIONS:
+            return value
+
+        for occupation in OccupationField._OCCUPATIONS:
+            # e.g. "academic/educator" -> "educator"
+            if (value.startswith(occupation + "/") or
+                    value.endswith("/" + occupation)):
+                return occupation
+
+        # e.g. "k-12 student" -> "student"
+        if value.endswith(" student"):
+            return "student"
+
+        # ml1m aliases
+        aliases = {
+            "doctor/health care": "healthcare",
+            "administrator": "clerical/admin",
+            "sales/marketing": "salesman",
+            "unemployed": "none",
+        }
+
+        if value in aliases:
+            return aliases[value]
+
+        return "other"
+
+    def db_value(self, value):
+        return super(OccupationField, self).db_value(self._normalize(value))
+
 class Movie(BaseModel):
     movie_id = IntegerField(unique=True, primary_key=True)
     title = CharField()
     # null=True because the dataset is not that clean
     release_date = DateField(null=True)
     video_release_date = DateField(null=True)
-    imdb_url = CharField()
+    # null=True because the IMDb URL is not included in some MovieLens datasets
+    imdb_url = CharField(null=True)
+    # null=True because the TMDb URL is available in the ml20m dataset only
+    tmdb_url = CharField(null=True)
 
     # cached values
     ratings_count = IntegerField(null=True)
@@ -63,6 +109,9 @@ class Movie(BaseModel):
         if str(m_id) == m_id and m_id[0] == "m":
             m_id = m_id[1:]
         return Movie.get(Movie.movie_id == int(m_id))
+
+    # We use a `genre_xxx` boolean attribute for each genre and so have a bunch
+    # of methods to access these attributes programmatically
 
     @classmethod
     def genre_attr(cls, attr):
@@ -109,10 +158,18 @@ class Movie(BaseModel):
 
 class User(BaseModel):
     user_id = IntegerField(unique=True, primary_key=True)
+    # Note that in the ml1m dataset (MovieLens 1M) the age denotes a range:
+    #  1 = Under 18
+    # 18 = 18-24
+    # 25 = 25-34
+    # 35 = 35-44
+    # 45 = 45-49
+    # 50 = 50-55
+    # 56 = 56+
     age = IntegerField()
     gender = FixedCharField(max_length=1)
-    occupation = CharField()
-    zip_code = CharField()
+    occupation = OccupationField()
+    zip_code = CharField(null=True)
 
     # cached/computed values
     ratings_count = IntegerField(null=True)
@@ -134,9 +191,7 @@ class User(BaseModel):
         return json.loads(self.genres_json)
 
     def movies(self):
-        """
-        Return all the movies rated by this user
-        """
+        """Return all the movies rated by this user"""
         return (Movie.select()
                     .join(Rating, on=Rating.movie)
                     .where(Rating.user == self))
@@ -157,12 +212,6 @@ class Rating(BaseModel):
             (("user", "movie"), True),
         )
 
-    def positive(self):
-        return self.rating >= 3
-
-    def negative(self):
-        return self.rating < 3
-
     def __eq__(self, other):
         return self.user == other.user and \
                 self.movie == other.movie and \
@@ -170,6 +219,10 @@ class Rating(BaseModel):
 
 
 class UserLink(BaseModel):
+    """
+    An user link to their "buddies" in the projected graph. This is used to
+    cache the graph in the DB
+    """
     user = ForeignKeyField(User, related_name="links")
     buddies = JSONField(default={})
 
@@ -183,9 +236,7 @@ class KeyValue(BaseModel):
 
     @classmethod
     def get_key(cls, key, default=None):
-        """
-        Retrieve a key, like the ``dict#get`` method.
-        """
+        """Retrieve a key, like the ``dict#get`` method."""
         try:
             return pickle.loads(cls.get(cls.key==key).value)
         except KeyValue.DoesNotExist:
@@ -193,18 +244,14 @@ class KeyValue(BaseModel):
 
     @classmethod
     def set_key(cls, key, value):
-        """
-        Set a key to an arbitrary value.
-        """
+        """Set a key to an arbitrary value."""
         kv, _ = KeyValue.get_or_create(key=key)
         kv.value = pickle.dumps(value)
         kv.save()
 
     @classmethod
     def del_key(cls, key):
-        """
-        Permanently delete a key.
-        """
+        """Permanently delete a key."""
         return cls.delete().where(cls.key==key).execute() > 0
 
     def del_key_prefix(cls, prefix):

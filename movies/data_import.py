@@ -13,7 +13,20 @@ def log(s, verbose):
     if verbose:
         print "--> %s" % s
 
-def import_data(directory, verbose=False):
+def import_data(directory, format="ml100k", verbose=False):
+    """
+    Import data from a movielens dataset located in ``directory``.
+
+    Supported formats:
+        * ``ml100k``: MovieLens 100k dataset
+    """
+    # TODO other formats
+    if format == "ml100k":
+        import_ml100k(directory, verbose=verbose)
+    raise NotImplementedError()
+
+
+def import_ml100k(directory, verbose=False):
     log("Initializing...", verbose)
     init_db()
     log("Importing movies...", verbose)
@@ -154,6 +167,9 @@ def create_user_links():
     chunked_insert(UserLink, links)
 
 def chunked_insert(model, items, chunk_size=150):
+    """
+    Insert a bunch of items in chunks to be faster than one-by-one.
+    """
     # https://www.sqlite.org/limits.html#max_compound_select
     with db.atomic():
         for idx in range(0, len(items), chunk_size):
