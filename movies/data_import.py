@@ -64,6 +64,12 @@ def create_user_links():
     chunked_insert(UserLink, links)
 
 class Importer(object):
+    """
+    A basic importer than doesn't do anything. Subclasses should implement the
+    ``import_movies``, ``import_users``, ``import_ratings``, and
+    ``post_import`` methods.
+    """
+
     def __init__(self, directory, verbose=False):
         self.directory = directory
         self.verbose = verbose
@@ -89,17 +95,10 @@ class Importer(object):
     def start(self):
         init_db()
 
-    def import_movies(self):
-        pass
-
-    def import_users(self):
-        pass
-
-    def import_ratings(self):
-        pass
-
-    def post_import(self):
-        pass
+    def import_movies(self): pass
+    def import_users(self): pass
+    def import_ratings(self): pass
+    def post_import(self): pass
 
 class Ml100kImporter(Importer):
     def parse_date(self, s):
@@ -202,10 +201,10 @@ def import_data(directory, dataset_format, verbose=False):
     Import data from a movielens dataset located in ``directory``.
 
     Supported formats:
-        * ``ml100k``: MovieLens 100k dataset
+        * ``ml-100k``: MovieLens 100k dataset
     """
     fmts = {
-        "ml100k": Ml100kImporter,
+        "ml-100k": Ml100kImporter,
     }
 
     if dataset_format in fmts:

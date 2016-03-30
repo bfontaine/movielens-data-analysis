@@ -51,7 +51,7 @@ class OccupationField(CharField):
     A text field that uniformize the occupation
     """
 
-    # These are from the ml100k dataset
+    # These are from the ml-100k dataset
     _OCCUPATIONS = set((
         "administrator", "artist", "doctor", "educator", "engineer",
         "entertainment", "executive", "healthcare", "homemaker", "lawyer",
@@ -73,7 +73,7 @@ class OccupationField(CharField):
         if value.endswith(" student"):
             return "student"
 
-        # ml1m aliases
+        # ml-1m aliases
         aliases = {
             "doctor/health care": "healthcare",
             "administrator": "clerical/admin",
@@ -158,7 +158,7 @@ class Movie(BaseModel):
 
 class User(BaseModel):
     user_id = IntegerField(unique=True, primary_key=True)
-    # Note that in the ml1m dataset (MovieLens 1M) the age denotes a range:
+    # Note that in the ml-1m dataset (MovieLens 1M) the age denotes a range:
     #  1 = Under 18
     # 18 = 18-24
     # 25 = 25-34
