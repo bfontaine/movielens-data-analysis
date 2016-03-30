@@ -224,6 +224,7 @@ class UserLink(BaseModel):
     cache the graph in the DB
     """
     user = ForeignKeyField(User, related_name="links")
+    # Mapping of user_id -> {j: jaccard_index, c: common_movies_count}
     buddies = JSONField(default={})
 
 class KeyValue(BaseModel):
