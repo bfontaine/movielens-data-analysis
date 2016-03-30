@@ -6,3 +6,5 @@
 /figures
 /notes/*.pdf
 node_modules
+*.zip
+*.zip.1

@@ -14,7 +14,8 @@ if [ ! -d $DIRECTORY ]; then
   echo "==> Downloading the dataset"
 
   rm -f ${DATASET}.zip
-  wget -q http://files.grouplens.org/datasets/movielens/${DATASET}.zip
+  URL=http://files.grouplens.org/datasets/movielens/${DATASET}.zip
+  wget -q $URL -O ${DATASET}.zip
   unzip -qq ${DATASET}.zip
   mv $DATASET $DIRECTORY
   rm -f ${DATASET}.zip $DIRECTORY/u*.base $DIRECTORY/u*.test
