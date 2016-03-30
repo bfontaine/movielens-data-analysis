@@ -16,6 +16,7 @@ numpy==1.10.4
 omitempty==0.1.1
 pandas==0.17.1
 peewee==2.8.0
+py2neo==3b1
 Pygments==2.1
 pyparsing==2.1.0
 pysqlite==2.8.1
