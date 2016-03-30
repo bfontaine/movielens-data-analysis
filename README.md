@@ -52,5 +52,5 @@ On OS X if you get an error when using Matplotlib use
 
 Install it with:
 
-  curl -sL https://git.io/vguGk >| ./venv/bin/frameworkpython
-  chmod +x ./venv/bin/frameworkpython
+    curl -sL https://git.io/vguGk >| ./venv/bin/frameworkpython
+    chmod +x ./venv/bin/frameworkpython
